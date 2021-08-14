@@ -1,22 +1,55 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import './login.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp();
+  runApp(MaterialApp(
+    initialRoute: 'Home',
+    routes: {
+      'Home': (context) => const MyApp(),
+      'Login': (context) => LoginScreen(),
+      //'Signup': (context) => Signup(),
+    },
+  ));
+}
 
 /// This is the main application widget.
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  State<MyApp> createState()  => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
 
   static const String _title = "Woman's Service";
 
+  int selectedIndex = 0;
+
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: _title,
       home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
+        appBar: AppBar(
+            title: const Text(
+                _title,
+                style: TextStyle(color: Colors.white),
+            )
+        ),
         body: const MyStatelessWidget(),
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 0,
+          currentIndex: selectedIndex,
+          onTap: (int index) {setState(() {
+            this.selectedIndex = index;
+            if(index == 2) {
+              Navigator.pushNamed(context, 'Login');
+            }
+          });
+          },
           items: [
             BottomNavigationBarItem(
                 icon: Icon(Icons.home),
@@ -36,10 +69,9 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.amber,
         primaryColor: const Color(0xFFffc107),
-        accentColor: const Color(0xFFffc107),
-        canvasColor: const Color(0xFFfafafa),
+        //accentColor: const Color(0xFFffc107),
+        //canvasColor: const Color(0xFFfafafa),
       ),
-
     );
   }
 }

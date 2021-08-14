@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "430602051071",
+    "project_id": "woman-s-service",
+    "storage_bucket": "woman-s-service.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:430602051071:android:c1149977f08dfcb46b1bca",
+        "android_client_info": {
+          "package_name": "com.imd.womansservice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "430602051071-bhiba68g246lnms18m0o8b13v1dmbcb1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUG05lB5Ktj0GBRM8id9evXUmsGcmy0Sk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "430602051071-bhiba68g246lnms18m0o8b13v1dmbcb1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:430602051071:android:a6629240bb007f236b1bca",
+        "android_client_info": {
+          "package_name": "com.imd.womansservice.womans_service"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "430602051071-41c3jp54pe1guvmad6i5h3g1ufob5tit.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.imd.womansservice.womans_service",
+            "certificate_hash": "222ce601595a3c2a927749e4750e143538456f83"
+          }
+        },
+        {
+          "client_id": "430602051071-bhiba68g246lnms18m0o8b13v1dmbcb1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUG05lB5Ktj0GBRM8id9evXUmsGcmy0Sk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "430602051071-bhiba68g246lnms18m0o8b13v1dmbcb1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
