@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import './login.dart';
+import 'auth.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,8 +9,7 @@ void main() {
     initialRoute: 'Home',
     routes: {
       'Home': (context) => const MyApp(),
-      'Login': (context) => LoginScreen(),
-      //'Signup': (context) => Signup(),
+      'Login': (context) => SignInPage(),
     },
   ));
 }
