@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'auth.dart';
+import 'employeeregister.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,6 +11,7 @@ void main() {
     routes: {
       'Home': (context) => const MyApp(),
       'Login': (context) => SignInPage(),
+      'Prestadora de Serviços': (context) => EmployeeRegister(),
     },
   ));
 }
@@ -75,7 +77,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-/// This is the stateless widget that the main application instantiates.
 class MyStatelessWidget extends StatelessWidget {
   const MyStatelessWidget({Key? key}) : super(key: key);
 

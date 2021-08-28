@@ -9,12 +9,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'employeeregister.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
-/// Entrypoint example for various sign-in flows with Firebase.
 class SignInPage extends StatefulWidget {
-  /// The page title.
   final String title = 'Login';
 
   @override
@@ -65,7 +64,8 @@ class _SignInPageState extends State<SignInPage> {
           padding: const EdgeInsets.all(8),
           children: <Widget>[
             _UserInfoCard(user),
-            _OtherProvidersSignInSection(),
+            _OtherProvidersSignInSection(user),
+            _EmployeeRegister(user),
           ],
         );
       }),
@@ -162,8 +162,9 @@ class _UserInfoCardState extends State<_UserInfoCard> {
                           subtitle: Text(
                               //"${provider.uid == null ? "" : "ID: ${provider.uid}\n"}"
                                   "${provider.email == null ? "" : "Email: ${provider.email}\n"}"
-                                  "${provider.phoneNumber == null ? "" : "Phone number: ${provider.phoneNumber}\n"}"
+                                  //"${provider.phoneNumber == null ? "" : "Phone number: ${provider.phoneNumber}\n"}"
                                   "${provider.displayName == null ? "" : "Name: ${provider.displayName}\n"}"),
+                          isThreeLine: true,
                         ),
                       ),
                     ),
@@ -177,10 +178,11 @@ class _UserInfoCardState extends State<_UserInfoCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+                    /*
                     IconButton(
                       onPressed: () => widget.user?.reload(),
                       icon: const Icon(Icons.refresh),
-                    ),
+                    ),*/
                     IconButton(
                       onPressed: () => showDialog(
                         context: context,
@@ -261,7 +263,9 @@ class _UpdateUserDialogState extends State<UpdateUserDialog> {
 }
 
 class _OtherProvidersSignInSection extends StatefulWidget {
-  _OtherProvidersSignInSection();
+  final User? user;
+
+  _OtherProvidersSignInSection(this.user);
 
   @override
   State<StatefulWidget> createState() => _OtherProvidersSignInSectionState();
@@ -274,25 +278,27 @@ class _OtherProvidersSignInSectionState
   @override
   Widget build(BuildContext context) {
     return Card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Container(
+      child: Visibility(
+        visible: widget.user == null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Container(
                 padding: const EdgeInsets.only(top: 16),
                 alignment: Alignment.center,
                 child: SignInButton(Buttons.Google,
                   text: 'Sign in with Google',
                   onPressed: () async {
                     _signInWithGoogle();
-                    },
+                  },
                 )
-              ),
-                ]
-          ),
+            ),
+          ]
+      ),),
+
     );
   }
 
-  //Example code of how to sign in with Google.
   Future<void> _signInWithGoogle() async {
     try {
       UserCredential userCredential;
@@ -323,5 +329,40 @@ class _OtherProvidersSignInSectionState
         ),
       );
     }
+  }
+}
+
+class _EmployeeRegister extends StatefulWidget {
+  final User? user;
+
+  _EmployeeRegister(this.user);
+
+  @override
+  State<StatefulWidget> createState() => _EmployeeRegisterState();
+}
+
+class _EmployeeRegisterState
+    extends State<_EmployeeRegister> {
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Visibility(
+        visible: widget.user != null,
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                  padding: const EdgeInsets.only(top: 16),
+                  alignment: Alignment.center,
+                  child:
+                    TextButton(onPressed: () { Navigator.of(context).pushNamed('Prestadora de Serviços'); },
+                    child: Text("Seja uma Prestadora de Serviços"),),
+              ),
+            ]
+        ),),
+
+    );
   }
 }
