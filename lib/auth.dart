@@ -1,17 +1,49 @@
-// Copyright 2020 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// ignore_for_file: deprecated_member_use
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'employeeregister.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
+
+bool registerAsEmployee = false;
+bool registerAsUser = false;
+bool validateUser = false;
+
+CollectionReference users = FirebaseFirestore.instance.collection('usuários');
+CollectionReference employees = FirebaseFirestore.instance.collection('prestadoras de serviço');
+
+Future<void> userHasPermissionToValidate(User? user) async {
+  if(user != null){
+    DocumentSnapshot result = await users.doc(user.uid).get();
+    print(result);
+    if(result.get('usuário validador')) {
+      validateUser = true;
+    }
+  }
+}
+
+Future<void> userHasPermissionToRegister(User? user) async {
+  if(user != null){
+    DocumentSnapshot result = await users.doc(user.uid).get();
+    print(result);
+    if(result.get('disponível para validação') == false){
+      registerAsUser = true;
+    }
+  }
+}
+
+Future<void> userHasPermissionToRegisterAsEmployee(User? user) async {
+  if(user != null){
+    DocumentSnapshot result = await users.doc(user.uid).get();
+    print(result);
+    if(result.get('autorizado') == true) {
+      registerAsEmployee = true;
+    }
+  }
+}
+
 
 class SignInPage extends StatefulWidget {
   final String title = 'Login';
@@ -26,6 +58,7 @@ class _SignInPageState extends State<SignInPage> {
   @override
   void initState() {
     _auth.userChanges().listen((event) => setState(() => user = event));
+    print(registerAsUser);
     super.initState();
   }
 
@@ -42,7 +75,7 @@ class _SignInPageState extends State<SignInPage> {
               onPressed: () async {
                 final User? user = _auth.currentUser;
                 if (user == null) {
-                  Scaffold.of(context).showSnackBar(const SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Nenhum usuário logado.', textAlign: TextAlign.center),
                   ));
                   return;
@@ -50,7 +83,7 @@ class _SignInPageState extends State<SignInPage> {
                 await _signOut();
 
                 final String uid = user.uid;
-                Scaffold.of(context).showSnackBar(SnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('$uid deslogou com sucesso.'),
                 ));
               },
@@ -61,11 +94,13 @@ class _SignInPageState extends State<SignInPage> {
       ),
       body: Builder(builder: (BuildContext context) {
         return ListView(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           children: <Widget>[
             _UserInfoCard(user),
             _OtherProvidersSignInSection(user),
             _EmployeeRegister(user),
+            _UserRegister(user),
+            _ValidateUser(user),
           ],
         );
       }),
@@ -122,28 +157,10 @@ class _UserInfoCardState extends State<_UserInfoCard> {
                     ),
                   ),
                 ),
-            Text(widget.user == null || widget.user?.isAnonymous == null
-                ? 'Nenhum usuário logado'
-                //: '${widget.user!.isAnonymous ? 'User is anonymous\n\n' : ''}'
-                //'Email: ${widget.user!.email} (verified: ${widget.user!.emailVerified})\n\n'
-                //'Phone number: ${widget.user!.phoneNumber}\n\n'
-                //'Name: ${widget.user!.displayName}\n\n\n'
-                //'ID: ${widget.user!.uid}\n\n'
-                //'Tenant ID: ${widget.user!.tenantId}\n\n'
-                //'Refresh token: ${widget.user!.refreshToken}\n\n\n'
-                :'Created: ${widget.user!.metadata.creationTime.toString()}\n\n'
-                'Last login: ${widget.user!.metadata.lastSignInTime}\n\n'),
             if (widget.user != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  /*Text(
-                    widget.user!.providerData.isEmpty
-                        ? 'No providers'
-                        : 'Providers:',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),*/
                   for (var provider in widget.user!.providerData)
                     Dismissible(
                       key: Key(provider.uid!),
@@ -158,11 +175,8 @@ class _UserInfoCardState extends State<_UserInfoCard> {
                               onPressed: () =>
                                   widget.user!.unlink(provider.providerId))
                               : Image.network(provider.photoURL!),
-                          //title: Text(provider.providerId),
                           subtitle: Text(
-                              //"${provider.uid == null ? "" : "ID: ${provider.uid}\n"}"
                                   "${provider.email == null ? "" : "Email: ${provider.email}\n"}"
-                                  //"${provider.phoneNumber == null ? "" : "Phone number: ${provider.phoneNumber}\n"}"
                                   "${provider.displayName == null ? "" : "Name: ${provider.displayName}\n"}"),
                           isThreeLine: true,
                         ),
@@ -178,11 +192,10 @@ class _UserInfoCardState extends State<_UserInfoCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    /*
                     IconButton(
                       onPressed: () => widget.user?.reload(),
                       icon: const Icon(Icons.refresh),
-                    ),*/
+                    ),
                     IconButton(
                       onPressed: () => showDialog(
                         context: context,
@@ -271,9 +284,7 @@ class _OtherProvidersSignInSection extends StatefulWidget {
   State<StatefulWidget> createState() => _OtherProvidersSignInSectionState();
 }
 
-class _OtherProvidersSignInSectionState
-    extends State<_OtherProvidersSignInSection> {
-
+class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSection> {
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +299,7 @@ class _OtherProvidersSignInSectionState
                 alignment: Alignment.center,
                 child: SignInButton(Buttons.Google,
                   text: 'Sign in with Google',
-                  onPressed: () async {
+                  onPressed: () {
                     _signInWithGoogle();
                   },
                 )
@@ -318,12 +329,12 @@ class _OtherProvidersSignInSectionState
       }
 
       final user = userCredential.user;
-      Scaffold.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Sign In ${user?.uid} with Google'),
       ));
     } catch (e) {
       print(e);
-      Scaffold.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to sign in with Google: $e'),
         ),
@@ -349,7 +360,7 @@ class _EmployeeRegisterState
   Widget build(BuildContext context) {
     return Card(
       child: Visibility(
-        visible: widget.user != null,
+        visible: (registerAsEmployee == true && widget.user != null),
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
@@ -359,6 +370,70 @@ class _EmployeeRegisterState
                   child:
                     TextButton(onPressed: () { Navigator.of(context).pushNamed('Prestadora de Serviços'); },
                     child: Text("Seja uma Prestadora de Serviços"),),
+              ),
+            ]
+        ),),
+
+    );
+  }
+}
+
+class _UserRegister extends StatefulWidget {
+  final User? user;
+  _UserRegister(this.user);
+
+  @override
+  State<StatefulWidget> createState() => _UserRegisterState();
+}
+
+class _UserRegisterState extends State<_UserRegister> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Visibility(
+        visible: ((registerAsUser == true) && (widget.user != null)),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.only(top: 16),
+                alignment: Alignment.center,
+                child:
+                TextButton(onPressed: () { Navigator.of(context).pushNamed('Registro de Usuária'); },
+                  child: Text("Validação de Cadastro"),),
+              ),
+            ]
+        ),
+      ),
+    );
+  }
+}
+
+class _ValidateUser extends StatefulWidget {
+  final User? user;
+  _ValidateUser(this.user);
+
+  @override
+  State<StatefulWidget> createState() => _ValidateUserState();
+}
+
+class _ValidateUserState extends State<_ValidateUser> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Visibility(
+        visible: (validateUser == true && widget.user != null),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.only(top: 16),
+                alignment: Alignment.center,
+                child:
+                TextButton(onPressed: () { Navigator.of(context).pushNamed('Validar Usuários'); },
+                  child: Text("Validar Usuários"),),
               ),
             ]
         ),),

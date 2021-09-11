@@ -1,7 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'validateuser.dart';
 import 'auth.dart';
 import 'employeeregister.dart';
+import 'userregister.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +14,8 @@ void main() {
       'Home': (context) => const MyApp(),
       'Login': (context) => SignInPage(),
       'Prestadora de Serviços': (context) => EmployeeRegister(),
+      'Registro de Usuária': (context) => UserRegister(),
+      'Validar Usuários': (context) => ValidateUser(),
     },
   ));
 }
