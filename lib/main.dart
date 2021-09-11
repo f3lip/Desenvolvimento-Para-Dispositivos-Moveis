@@ -8,9 +8,9 @@ import 'auth.dart';
 import 'employeeregister.dart';
 import 'userregister.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp();
+  await Firebase.initializeApp();
   runApp(MaterialApp(
     initialRoute: 'Home',
     routes: {
@@ -132,17 +132,21 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     final FirebaseAuth _auth = FirebaseAuth.instance;
-    user = _auth.currentUser!;
-    getUsersDocuments().whenComplete(() {
-      setState(() {
-        updateBody();
+    user = _auth.currentUser;
+    if(user != null){
+      getUsersDocuments().whenComplete(() {
+        setState(() {
+          updateBody();
+        });
       });
-    });
-    getEmployeesDocuments().whenComplete(() {
-      setState(() {
-        updateBody();
+      getEmployeesDocuments().whenComplete(() {
+        setState(() {
+          updateBody();
+        });
       });
-    });
+    } else{
+      updateBody();
+    }
   }
 
   @override
@@ -206,13 +210,58 @@ class _MyAppState extends State<MyApp> {
                     return new Card(
                       child: ExpansionTile(
                         leading: CircleAvatar(backgroundImage:
-                        NetworkImage(''),
+                        NetworkImage(this.employeesList.docs[index].get('foto')),
                         ),
                         title: Text(this.employeesList.docs[index].get('nome de prestadora')),
-                        subtitle: Text(this.employeesList.docs[index].get('email de prestadora')),
+                        subtitle: Text(this.employeesList.docs[index].get('serviço prestado')),
                         children: [
                           new Container(
-                            child: new Text('data'),
+                            child: new Text(this.employeesList.docs[index].get('serviço prestado')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('Nome: ' + this.employeesList.docs[index].get('nome de prestadora')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('CPF/CNPJ: ' + this.employeesList.docs[index].get('cpfcnpj')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('E-mail: ' + this.employeesList.docs[index].get('email de prestadora')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('Estado de Atuação: ' + this.employeesList.docs[index].get('estado de atuação')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('Município de Atuação: ' + this.employeesList.docs[index].get('município de atuação')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('Telefone: ' + this.employeesList.docs[index].get('telefone')),
+                          ),
+                          new Container(
+                            child: new Text(''),
+                          ),
+                          new Container(
+                            child: new Text('Celular: ' + this.employeesList.docs[index].get('celular')),
+                          ),
+                          new Container(
+                            child: new Text(''),
                           ),
                         ],
                       ),

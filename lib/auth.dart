@@ -12,7 +12,7 @@ CollectionReference employees = FirebaseFirestore.instance.collection('prestador
 
 
 class SignInPage extends StatefulWidget {
-  final String title = 'Login';
+  final String title = 'Minha Conta';
   const SignInPage({Key? key}) : super(key: key);
 
   @override
@@ -117,7 +117,7 @@ class _SignInPageState extends State<SignInPage> {
                   content: Text('$uid deslogou com sucesso.'),
                 ));
               },
-              child: const Text('Sair'),
+              child: Visibility(visible: this.user !=null, child: const Text('Sair', style: TextStyle(color: Colors.white))),
             );
           })
         ],
@@ -126,9 +126,9 @@ class _SignInPageState extends State<SignInPage> {
         return ListView(
           padding: const EdgeInsets.all(10),
           children: <Widget>[
-            _UserInfoCard(user),
-            _OtherProvidersSignInSection(user, checkPermissions()),
-            Visibility(visible: (this.registerAsEmployee == true), child: _EmployeeRegister(user)),
+            Visibility(visible: this.user != null, child: _UserInfoCard(user)),
+            Visibility(visible: this.user == null, child: _OtherProvidersSignInSection(user, checkPermissions())),
+            Visibility(visible: (this.registerAsEmployee == true), child: _EmployeeRegister(user, checkPermissions())),
             Visibility(visible: (this.registerAsUser == true), child: _UserRegister(user)),
             Visibility(visible: (this.validateUser == true), child: _ValidateUser(user)),
             Visibility(visible: (this.validateEmployee == true), child: _ValidateEmployee(user)),
@@ -378,8 +378,8 @@ class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSecti
 
 class _EmployeeRegister extends StatefulWidget {
   final User? user;
-
-  _EmployeeRegister(this.user);
+  final Future<void> checkPermissions;
+  _EmployeeRegister(this.user, this.checkPermissions);
 
   @override
   State<StatefulWidget> createState() => _EmployeeRegisterState();
@@ -398,7 +398,9 @@ class _EmployeeRegisterState extends State<_EmployeeRegister> {
               padding: const EdgeInsets.only(top: 16),
               alignment: Alignment.center,
               child:
-              TextButton(onPressed: () { Navigator.of(context).pushNamed('Prestadora de Serviços'); },
+              TextButton(onPressed: () {
+                Navigator.of(context).pushNamed('Prestadora de Serviços').then((value) => widget.checkPermissions);
+                },
                 child: Text("Seja uma Prestadora de Serviços"),),
               ),
             ]

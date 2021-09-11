@@ -46,9 +46,11 @@ class _RegisterFormState extends State<_RegisterForm>{
   List ufdata = List.empty(growable: true);
   List mundata = List.empty(growable: true);
 
+
   var _myUFSelection = null;
   var _myMunSelection = null;
-
+  List<String> services = ['Serviços Elétricos', 'Serviços Mecânicos', 'Serviços Domésticos', 'Outros'];
+  var _myServiceSelection = null;
   Future<String> getUFData() async {
     var res = await http.get(uri, headers: {"Accept": "application/json"});
     var resBody = json.decode(res.body);
@@ -77,16 +79,22 @@ class _RegisterFormState extends State<_RegisterForm>{
       'nome de prestadora': this.name,
       'email de prestadora': this.email,
       'id': this.user.uid,
-      'cpf/cnpj': this.cpfcnpj,
+      'cpfcnpj': this.cpfcnpj,
       'estado de atuação': this._myUFSelection,
       'município de atuação': this._myMunSelection,
       'telefone': this.phone1,
       'celular': this.phone2,
+      'serviço prestado': this._myServiceSelection,
+      'foto': this.user.photoURL,
       'disponível para validação': false,
       'autorizado': false,
     })
-        .then((value) => "Adicionado com sucesso")
-        .catchError((error) =>
+        .then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Enviado com Sucesso!'),
+      ));
+      Navigator.of(context).pop();
+    }).catchError((error) =>
     "Ocorreu um erro:\n $error");
   }
 
@@ -215,7 +223,7 @@ class _RegisterFormState extends State<_RegisterForm>{
             ),
             onChanged: (newVal) {
               setState(() {
-                _myUFSelection = newVal;
+                _myUFSelection = newVal.toString();
                 print(_myUFSelection);
               });
               getMData(Uri.parse("https://servicodados.ibge.gov.br/api/v1/localidades/estados/" + _myUFSelection + "/municipios"));
@@ -238,10 +246,31 @@ class _RegisterFormState extends State<_RegisterForm>{
             ),
             onChanged: (newVal) {
               setState(() {
-                _myMunSelection = newVal;
+                _myMunSelection = newVal.toString();
               });
             },
             value: _myMunSelection,
+          ),
+          DropdownButtonFormField(
+            items: services.map((item) {
+              return new DropdownMenuItem(
+                child: new Text(item),
+                value: item.toString(),
+              );
+            }).toList(),
+            decoration: InputDecoration(
+              labelText: 'Serviço Prestado*',
+              labelStyle: TextStyle(color: Colors.amber),
+              contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0), borderSide: BorderSide(color: Colors.amber)),
+              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+            ),
+            onChanged: (newVal) {
+              setState(() {
+                _myServiceSelection = newVal.toString();
+              });
+            },
+            value: _myServiceSelection,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10.0),
