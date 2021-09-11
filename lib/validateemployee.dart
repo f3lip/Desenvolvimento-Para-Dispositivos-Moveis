@@ -2,14 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class ValidateUser extends StatefulWidget {
-  final String title = 'Validar Usuárias';
+class ValidateEmployee extends StatefulWidget {
+  final String title = 'Validar Prestadoras de Serviços';
 
   @override
-  State<StatefulWidget> createState() => _ValidateUserState();
+  State<StatefulWidget> createState() => _ValidateEmployeeState();
 }
 
-class _ValidateUserState extends State<ValidateUser> {
+class _ValidateEmployeeState extends State<ValidateEmployee> {
   Widget _body = Scaffold(
     body: Padding(
       padding: const EdgeInsets.all(20.0),
@@ -24,7 +24,7 @@ class _ValidateUserState extends State<ValidateUser> {
     ),
     )
   );
-  CollectionReference users = FirebaseFirestore.instance.collection('usuários');
+  CollectionReference users = FirebaseFirestore.instance.collection('prestadora de serviços');
   User? user;
   late QuerySnapshot list;
 
@@ -32,7 +32,7 @@ class _ValidateUserState extends State<ValidateUser> {
   void initState() {
     super.initState();
     getDocuments().whenComplete(() => setState(() {
-      _body = _goToValidateUser();
+      _body = _goToValidateEmployee();
     }));
     final FirebaseAuth _auth = FirebaseAuth.instance;
     user = _auth.currentUser!;
@@ -50,7 +50,7 @@ class _ValidateUserState extends State<ValidateUser> {
     return _body;
   }
 
-  Widget _goToValidateUser() {
+  Widget _goToValidateEmployee() {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -88,7 +88,7 @@ class _ValidateUserState extends State<ValidateUser> {
                               users.doc(list.docs[index].get('id'))
                                   .update({'autorizado': true, 'disponível para validação': false})
                                   .then((value) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário Validado!')),);
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Prestadora de Serviços Validada!')),);
                                     getDocuments();
                                     Navigator.of(context).pop();
                                   });
@@ -104,7 +104,7 @@ class _ValidateUserState extends State<ValidateUser> {
                             users.doc(list.docs[index].get('id'))
                                 .update({'autorizado': false, 'disponível para validação': false})
                                 .then((value) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário Recusado!')),);
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Prestadora de Serviços Recusada!')),);
                               Navigator.of(context).pop();
                             });
                             setState(() {});

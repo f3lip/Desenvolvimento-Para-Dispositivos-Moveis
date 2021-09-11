@@ -7,46 +7,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
-bool registerAsEmployee = false;
-bool registerAsUser = false;
-bool validateUser = false;
-
 CollectionReference users = FirebaseFirestore.instance.collection('usuários');
 CollectionReference employees = FirebaseFirestore.instance.collection('prestadoras de serviço');
-
-Future<void> userHasPermissionToValidate(User? user) async {
-  if(user != null){
-    DocumentSnapshot result = await users.doc(user.uid).get();
-    print(result);
-    if(result.get('usuário validador')) {
-      validateUser = true;
-    }
-  }
-}
-
-Future<void> userHasPermissionToRegister(User? user) async {
-  if(user != null){
-    DocumentSnapshot result = await users.doc(user.uid).get();
-    print(result);
-    if(result.get('disponível para validação') == false){
-      registerAsUser = true;
-    }
-  }
-}
-
-Future<void> userHasPermissionToRegisterAsEmployee(User? user) async {
-  if(user != null){
-    DocumentSnapshot result = await users.doc(user.uid).get();
-    print(result);
-    if(result.get('autorizado') == true) {
-      registerAsEmployee = true;
-    }
-  }
-}
 
 
 class SignInPage extends StatefulWidget {
   final String title = 'Login';
+  const SignInPage({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SignInPageState();
@@ -55,11 +22,74 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   User? user;
 
+  bool registerAsEmployee = false;
+  bool registerAsUser = false;
+  bool validateUser = false;
+  bool validateEmployee = false;
+
+  Future<void> userHasPermissionToValidateUser(User? user) async {
+    if(user != null){
+      DocumentSnapshot result = await users.doc(user.uid).get();
+      if(result.get('usuário validador')) {
+        setState(() {
+          validateUser = true;
+        });
+      }
+    } else{
+      validateUser = false;
+    }
+  }
+
+  Future<void> userHasPermissionToRegister(User? user) async {
+    if(user != null){
+      DocumentSnapshot result = await users.doc(user.uid).get();
+      if(result.get('disponível para validação') == false && result.get('autorizado') == false){
+        setState(() {
+          registerAsUser = true;
+        });
+      }
+    } else{
+      registerAsUser = false;
+    }
+  }
+
+  Future<void> userHasPermissionToRegisterAsEmployee(User? user) async {
+    if(user != null){
+      DocumentSnapshot result = await users.doc(user.uid).get();
+      if(result.get('autorizado') == true) {
+        setState(() {
+          registerAsEmployee = true;
+        });
+      }
+    } else{
+      registerAsEmployee = false;
+    }
+  }
+
+  Future<void> userHasPermissionToValidateEmployee(User? user) async {
+    if(user != null){
+      DocumentSnapshot result = await users.doc(user.uid).get();
+      if(result.get('usuário validador') == true) {
+        setState(() {
+          validateEmployee = true;
+        });
+      }
+    } else{
+      validateEmployee = false;
+    }
+  }
+
   @override
   void initState() {
     _auth.userChanges().listen((event) => setState(() => user = event));
-    print(registerAsUser);
     super.initState();
+  }
+
+  Future<void> checkPermissions() async {
+    await userHasPermissionToRegister(this.user);
+    await userHasPermissionToRegisterAsEmployee(this.user);
+    await userHasPermissionToValidateUser(this.user);
+    await userHasPermissionToValidateEmployee(this.user);
   }
 
   @override
@@ -97,10 +127,11 @@ class _SignInPageState extends State<SignInPage> {
           padding: const EdgeInsets.all(10),
           children: <Widget>[
             _UserInfoCard(user),
-            _OtherProvidersSignInSection(user),
-            _EmployeeRegister(user),
-            _UserRegister(user),
-            _ValidateUser(user),
+            _OtherProvidersSignInSection(user, checkPermissions()),
+            Visibility(visible: (this.registerAsEmployee == true), child: _EmployeeRegister(user)),
+            Visibility(visible: (this.registerAsUser == true), child: _UserRegister(user)),
+            Visibility(visible: (this.validateUser == true), child: _ValidateUser(user)),
+            Visibility(visible: (this.validateEmployee == true), child: _ValidateEmployee(user)),
           ],
         );
       }),
@@ -277,14 +308,15 @@ class _UpdateUserDialogState extends State<UpdateUserDialog> {
 
 class _OtherProvidersSignInSection extends StatefulWidget {
   final User? user;
-
-  _OtherProvidersSignInSection(this.user);
+  final Future<void> checkPermissions;
+  _OtherProvidersSignInSection(this.user, this.checkPermissions);
 
   @override
   State<StatefulWidget> createState() => _OtherProvidersSignInSectionState();
 }
 
 class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSection> {
+
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +333,7 @@ class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSecti
                   text: 'Sign in with Google',
                   onPressed: () {
                     _signInWithGoogle();
+                    widget.checkPermissions;
                   },
                 )
             ),
@@ -352,28 +385,24 @@ class _EmployeeRegister extends StatefulWidget {
   State<StatefulWidget> createState() => _EmployeeRegisterState();
 }
 
-class _EmployeeRegisterState
-    extends State<_EmployeeRegister> {
+class _EmployeeRegisterState extends State<_EmployeeRegister> {
 
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Visibility(
-        visible: (registerAsEmployee == true && widget.user != null),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                  padding: const EdgeInsets.only(top: 16),
-                  alignment: Alignment.center,
-                  child:
-                    TextButton(onPressed: () { Navigator.of(context).pushNamed('Prestadora de Serviços'); },
-                    child: Text("Seja uma Prestadora de Serviços"),),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.only(top: 16),
+              alignment: Alignment.center,
+              child:
+              TextButton(onPressed: () { Navigator.of(context).pushNamed('Prestadora de Serviços'); },
+                child: Text("Seja uma Prestadora de Serviços"),),
               ),
             ]
-        ),),
-
+        ),
     );
   }
 }
@@ -391,20 +420,17 @@ class _UserRegisterState extends State<_UserRegister> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Visibility(
-        visible: ((registerAsUser == true) && (widget.user != null)),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.only(top: 16),
-                alignment: Alignment.center,
-                child:
-                TextButton(onPressed: () { Navigator.of(context).pushNamed('Registro de Usuária'); },
-                  child: Text("Validação de Cadastro"),),
-              ),
-            ]
-        ),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.only(top: 16),
+              alignment: Alignment.center,
+              child:
+              TextButton(onPressed: () { Navigator.of(context).pushNamed('Registro de Usuária'); },
+                child: Text("Solicitar Validação de Cadastro"),),
+            ),
+          ]
       ),
     );
   }
@@ -423,21 +449,47 @@ class _ValidateUserState extends State<_ValidateUser> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Visibility(
-        visible: (validateUser == true && widget.user != null),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.only(top: 16),
-                alignment: Alignment.center,
-                child:
-                TextButton(onPressed: () { Navigator.of(context).pushNamed('Validar Usuários'); },
-                  child: Text("Validar Usuários"),),
-              ),
-            ]
-        ),),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.only(top: 16),
+              alignment: Alignment.center,
+              child:
+              TextButton(onPressed: () { Navigator.of(context).pushNamed('Validar Usuárias'); },
+                child: Text("Validar Usuárias"),),
+            ),
+          ]
+      ),
+    );
+  }
+}
 
+class _ValidateEmployee extends StatefulWidget {
+  final User? user;
+  _ValidateEmployee(this.user);
+
+  @override
+  State<StatefulWidget> createState() => _ValidateEmployeeState();
+}
+
+class _ValidateEmployeeState extends State<_ValidateEmployee> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.only(top: 16),
+              alignment: Alignment.center,
+              child:
+              TextButton(onPressed: () { Navigator.of(context).pushNamed('Validar Prestadoras de Serviços'); },
+                child: Text("Validar Prestadoras de Serviços"),),
+            ),
+          ]
+      ),
     );
   }
 }

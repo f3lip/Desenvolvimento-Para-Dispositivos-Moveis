@@ -82,8 +82,8 @@ class _RegisterFormState extends State<_RegisterForm>{
       'município de atuação': this._myMunSelection,
       'telefone': this.phone1,
       'celular': this.phone2,
-      'validado': 'false',
-      'autorizado': 'false',
+      'disponível para validação': false,
+      'autorizado': false,
     })
         .then((value) => "Adicionado com sucesso")
         .catchError((error) =>
