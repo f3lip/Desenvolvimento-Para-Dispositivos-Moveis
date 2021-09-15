@@ -8,6 +8,9 @@ import 'auth.dart';
 import 'employeeregister.dart';
 import 'userregister.dart';
 
+/// Método main que inicializa o aplicativo, realizando os procedimentos
+/// necessários para que o firebase funcione, e para que as rotas de acesso
+/// as telas do app estejam disponíveis
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -24,7 +27,7 @@ Future<void> main() async {
   ));
 }
 
-/// This is the main application widget.
+/// Classe principal do aplicativo
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -42,6 +45,9 @@ class _MyAppState extends State<MyApp> {
   User? user;
   int selectedIndex = 0;
 
+  /// Gera o body que conta com a animação de carregamento da tela, vigente
+  /// enquanto o carregamento dos dados necessários para uso da tela principal
+  /// não é concluído
   Widget _body = Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -57,6 +63,8 @@ class _MyAppState extends State<MyApp> {
       )
   );
 
+  /// Gera o body que conta com o aviso de que é necessário realizar login para
+  /// visualizar a tela principal
   Widget pendingLogin(){
     return Scaffold(
         body: Padding(
@@ -80,6 +88,8 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  /// Gera o body que conta com o aviso de que a usuária ainda não foi validada,
+  /// e, portanto, não pode visualizar as prestadoras de serviços
   Widget pendingPermission() {
     return Scaffold(
         body: Padding(
@@ -102,6 +112,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  /// Método para obter os dados da usuária em banco de dados
   Future<void> getUsersDocuments() async {
     usersList = await users.where('id', isEqualTo: user!.uid).get();
     setState(() {
@@ -109,6 +120,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  /// Método para atualizar o body da tela de acordo com o estado do app: se a
+  /// usuária não realizou login, se não possui permissões, e se realizou o
+  /// login e está autorizada a visualizar as prestadoras de serviços
   Future<void> updateBody() async {
     if (user == null) {
       this._body = pendingLogin();
@@ -121,6 +135,8 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  /// Método para obter os dados de prestadoras de serviços em banco de dados e
+  /// solicitar a atualização da tela
   Future<void> getEmployeesDocuments() async {
     employeesList = await employees.where('autorizado', isEqualTo: true).get();
     setState(() {
@@ -149,6 +165,8 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  /// Tela principal do app, onde o body será substituído de acordo com o
+  /// carregamento da página e com as permissões da usuária
   @override
   Widget build(BuildContext context) {
 
@@ -199,6 +217,8 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  /// Gera, dinamicamente, a lista de prestadoras de serviços, a partir da
+  /// consulta em banco de dados
   Widget showEmployees() {
     return Scaffold(
         body: new Column(

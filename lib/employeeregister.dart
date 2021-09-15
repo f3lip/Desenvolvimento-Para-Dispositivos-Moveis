@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+/// Classe principal da tela de solicitação de registro como prestadora de serviços
 class EmployeeRegister extends StatelessWidget{
   const EmployeeRegister({Key? key}) : super(key: key);
 
@@ -23,6 +24,8 @@ class EmployeeRegister extends StatelessWidget{
   }
 }
 
+/// Classe que cria o formulário a ser preenchido pela usuária para solicitar
+/// registro como prestadora de serviços
 class _RegisterForm extends StatefulWidget{
   const _RegisterForm({Key? key}) : super(key: key);
 
@@ -32,6 +35,9 @@ class _RegisterForm extends StatefulWidget{
 }
 
 class _RegisterFormState extends State<_RegisterForm>{
+
+  // Instanciamento de variáveis necessárias para o formulário e envio de dados
+  // para persistência em banco de dados
   final _formKey = GlobalKey<FormState>();
   CollectionReference users = FirebaseFirestore.instance.collection('prestadora de serviços');
   String name = '';
@@ -41,16 +47,30 @@ class _RegisterFormState extends State<_RegisterForm>{
   String phone2 = '';
   late final User user;
 
+  // URI de acesso a API de consulta de estados do IBGE, ordenada por nome,
+  // que será usada para popular as opções de UF de Atuação
   final Uri uri = Uri.parse("https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome");
 
+  // Instanciamento de variáveis para atribuir o resultado das consultas a API
+  // do IBGE.
+  // ufdata se trata da lista de estados, e mundata da lista de municípios
   List ufdata = List.empty(growable: true);
   List mundata = List.empty(growable: true);
 
-
+  // Variáveis para obter o que foi selecionado pela usuária nos campos de
+  // UF de Atuação e Município de Atuação
   var _myUFSelection = null;
   var _myMunSelection = null;
+
+  // Lista de serviços possíveis para a prestadora de serviços selecionar em que
+  // atua.
   List<String> services = ['Serviços Elétricos', 'Serviços Mecânicos', 'Serviços Domésticos', 'Outros'];
+
+  // Variável para obter o que foi selecionado pela usuária em serviço prestado
   var _myServiceSelection = null;
+
+  /// Método para solicitar a lista de estados a API do IBGE e atualizar o
+  /// dropdown com as opções disponíveis
   Future<String> getUFData() async {
     var res = await http.get(uri, headers: {"Accept": "application/json"});
     var resBody = json.decode(res.body);
@@ -62,6 +82,8 @@ class _RegisterFormState extends State<_RegisterForm>{
     return "Sucess";
   }
 
+  /// Método para solicitar a lista de municípios a API do IBGE e atualizar o
+  /// dropdown com as opções disponíveis de acordo com o estado selecionado
   Future<String> getMData(munuri) async {
     var res = await http.get(munuri, headers: {"Accept": "application/json"});
     var resBody = json.decode(res.body);
@@ -73,6 +95,8 @@ class _RegisterFormState extends State<_RegisterForm>{
     return "Sucess";
   }
 
+  /// Método para incluir a solicitação de registro como prestadora de serviços
+  /// no banco de dados
   Future<void> addEmployee() {
     return users
         .doc(user.uid).set({

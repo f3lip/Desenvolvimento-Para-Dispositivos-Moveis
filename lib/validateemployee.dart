@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+/// Classe principal da validação de prestadoras de serviços
 class ValidateEmployee extends StatefulWidget {
   final String title = 'Validar Prestadoras de Serviços';
 
@@ -10,6 +11,8 @@ class ValidateEmployee extends StatefulWidget {
 }
 
 class _ValidateEmployeeState extends State<ValidateEmployee> {
+  // Gera o body inicial da tela, que traz a animação de carregamento enquanto
+  // os dados necessários para uso ainda não foram retornados
   Widget _body = Scaffold(
     body: Padding(
       padding: const EdgeInsets.all(20.0),
@@ -24,6 +27,9 @@ class _ValidateEmployeeState extends State<ValidateEmployee> {
     ),
     )
   );
+
+  // Variáveis necessárias para realizar conexão com banco de dados e obter os
+  // dados das prestadoras de serviços que solicitaram validação
   CollectionReference users = FirebaseFirestore.instance.collection('prestadora de serviços');
   User? user;
   late QuerySnapshot list;
@@ -38,6 +44,8 @@ class _ValidateEmployeeState extends State<ValidateEmployee> {
     user = _auth.currentUser!;
   }
 
+  /// Método para solicitar ao banco de dados todas as prestadoras de serviços
+  /// que estão disponíveis para validação
   Future<void> getDocuments() async {
     list = await users.where('disponível para validação', isEqualTo: true).get();
     setState(() {
@@ -50,6 +58,9 @@ class _ValidateEmployeeState extends State<ValidateEmployee> {
     return _body;
   }
 
+  /// Gera o body que traz a listagem de prestadoras de serviços pendentes de
+  /// validação, criando cards dinâmicos de acordo com o retorno do banco
+  /// de dados
   Widget _goToValidateEmployee() {
     return Scaffold(
       appBar: AppBar(
@@ -69,17 +80,67 @@ class _ValidateEmployeeState extends State<ValidateEmployee> {
                     leading: CircleAvatar(backgroundImage:
                     NetworkImage(user!.photoURL.toString()),
                     ),
-                    title: Text(list.docs[index].get('nome') + " " + list.docs[index].get('sobrenome')),
-                    subtitle: Text(list.docs[index].get('email')),
+                    title: Text(list.docs[index].get('nome de prestadora')),
+                    subtitle: Text(list.docs[index].get('email de prestadora')),
                     children: [
-                      new Text('Documento de Identificação'),
                       new Container(
                         child: new Image.network(
-                            list.docs[index].get('identificação'),
+                            list.docs[index].get('foto'),
                             width: 200,
                             //height: 200,
                             fit: BoxFit.cover
                         ),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('Serviço Prestado: ' + this.list.docs[index].get('serviço prestado')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('Nome: ' + this.list.docs[index].get('nome de prestadora')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('CPF/CNPJ: ' + this.list.docs[index].get('cpfcnpj')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('E-mail: ' + this.list.docs[index].get('email de prestadora')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('Estado de Atuação: ' + this.list.docs[index].get('estado de atuação')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('Município de Atuação: ' + this.list.docs[index].get('município de atuação')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('Telefone: ' + this.list.docs[index].get('telefone')),
+                      ),
+                      new Container(
+                        child: new Text(''),
+                      ),
+                      new Container(
+                        child: new Text('Celular: ' + this.list.docs[index].get('celular')),
+                      ),
+                      new Container(
+                        child: new Text(''),
                       ),
                       new Container(
                         child: 
@@ -93,7 +154,7 @@ class _ValidateEmployeeState extends State<ValidateEmployee> {
                                     Navigator.of(context).pop();
                                   });
                               },
-                            child: const Text('Validar Usuário'),
+                            child: const Text('Validar Prestadora de Serviços'),
                             style: ElevatedButton.styleFrom(primary: Colors.amber),
                         ),
                       ),

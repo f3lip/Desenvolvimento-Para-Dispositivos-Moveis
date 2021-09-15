@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Classe principal da tela de solicitar validação de usuária
 class UserRegister extends StatelessWidget{
   const UserRegister({Key? key}) : super(key: key);
 
@@ -24,6 +25,8 @@ class UserRegister extends StatelessWidget{
   }
 }
 
+/// Classe que cria o formulário a ser preenchido pela usuária para solicitar
+/// registro como usuária
 class _RegisterForm extends StatefulWidget{
   const _RegisterForm({Key? key}) : super(key: key);
 
@@ -33,6 +36,9 @@ class _RegisterForm extends StatefulWidget{
 }
 
 class _RegisterFormState extends State<_RegisterForm>{
+
+  // Instanciamento de variáveis necessárias para o formulário e envio de dados
+  // para persistência em banco de dados
   CollectionReference users = FirebaseFirestore.instance.collection('usuários');
   final _formKey = GlobalKey<FormState>();
   late String firstname = '';
@@ -43,6 +49,8 @@ class _RegisterFormState extends State<_RegisterForm>{
   late String fileUrl = '';
 
 
+  /// Método para obter um arquivo selecionado pela usuária e associar a
+  /// variável
   Future <void> getFile() async {
 
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -51,12 +59,11 @@ class _RegisterFormState extends State<_RegisterForm>{
       setState(() {
         file = File(result.files.single.path);
       });
-    } else {
-      // User canceled the picker
     }
   }
 
-
+  /// Método para incluir a solicitação de validação de usuária no banco de
+  /// dados
   Future<void> addUser() {
     return users
         .doc(user.uid).set({
@@ -165,10 +172,6 @@ class _RegisterFormState extends State<_RegisterForm>{
             child: ElevatedButton(
               onPressed: () {
                 if(_formKey.currentState!.validate()) {
-                  /*
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processando')),
-                  );*/
                   Reference ref = FirebaseStorage.instance.ref().child('${user.uid}/${file.path.split('/').last}');
                   UploadTask uploadTask = ref.putFile(file);
                   uploadTask.whenComplete(() async {

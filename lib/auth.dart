@@ -5,12 +5,12 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+// Instanciamento de variáveis de conexão com a autenticação e com o banco de dados do firebase
 final FirebaseAuth _auth = FirebaseAuth.instance;
-
 CollectionReference users = FirebaseFirestore.instance.collection('usuários');
 CollectionReference employees = FirebaseFirestore.instance.collection('prestadoras de serviço');
 
-
+/// Classe principal da página 'Minha Conta'
 class SignInPage extends StatefulWidget {
   final String title = 'Minha Conta';
   const SignInPage({Key? key}) : super(key: key);
@@ -27,6 +27,7 @@ class _SignInPageState extends State<SignInPage> {
   bool validateUser = false;
   bool validateEmployee = false;
 
+  /// Verifica se a usuária conta com permissão de validar usuárias
   Future<void> userHasPermissionToValidateUser(User? user) async {
     if(user != null){
       DocumentSnapshot result = await users.doc(user.uid).get();
@@ -40,6 +41,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  /// Verifica se a usuária conta com permissão para solicitar validação de cadastro
   Future<void> userHasPermissionToRegister(User? user) async {
     if(user != null){
       DocumentSnapshot result = await users.doc(user.uid).get();
@@ -53,6 +55,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  /// Verifica se a usuária conta com permissão de solicitar registro como prestadora de serviços
   Future<void> userHasPermissionToRegisterAsEmployee(User? user) async {
     if(user != null){
       DocumentSnapshot result = await users.doc(user.uid).get();
@@ -66,6 +69,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  /// Verifica se a usuária conta com permissão para validar solicitações de registro de prestadoras de serviços
   Future<void> userHasPermissionToValidateEmployee(User? user) async {
     if(user != null){
       DocumentSnapshot result = await users.doc(user.uid).get();
@@ -85,6 +89,7 @@ class _SignInPageState extends State<SignInPage> {
     super.initState();
   }
 
+  /// Método para chamar todas as verificações de permissão da usuária
   Future<void> checkPermissions() async {
     await userHasPermissionToRegister(this.user);
     await userHasPermissionToRegisterAsEmployee(this.user);
@@ -114,7 +119,7 @@ class _SignInPageState extends State<SignInPage> {
 
                 final String uid = user.uid;
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('$uid deslogou com sucesso.'),
+                  content: Text('Deslogou com sucesso!'),
                 ));
               },
               child: Visibility(visible: this.user !=null, child: const Text('Sair', style: TextStyle(color: Colors.white))),
@@ -127,7 +132,7 @@ class _SignInPageState extends State<SignInPage> {
           padding: const EdgeInsets.all(10),
           children: <Widget>[
             Visibility(visible: this.user != null, child: _UserInfoCard(user)),
-            Visibility(visible: this.user == null, child: _OtherProvidersSignInSection(user, checkPermissions())),
+            Visibility(visible: this.user == null, child: _SignInWithGoogle(user, checkPermissions())),
             Visibility(visible: (this.registerAsEmployee == true), child: _EmployeeRegister(user, checkPermissions())),
             Visibility(visible: (this.registerAsUser == true), child: _UserRegister(user)),
             Visibility(visible: (this.validateUser == true), child: _ValidateUser(user)),
@@ -138,12 +143,12 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  // Example code for sign out.
   Future<void> _signOut() async {
     await _auth.signOut();
   }
 }
 
+/// Gera o card que mostra informações sobre a usuária
 class _UserInfoCard extends StatefulWidget {
   final User? user;
 
@@ -166,7 +171,7 @@ class _UserInfoCardState extends State<_UserInfoCard> {
               padding: const EdgeInsets.only(bottom: 8),
               alignment: Alignment.center,
               child: const Text(
-                'Informações do Usuário',
+                'Informações da Usuária',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -206,9 +211,7 @@ class _UserInfoCardState extends State<_UserInfoCard> {
                               onPressed: () =>
                                   widget.user!.unlink(provider.providerId))
                               : Image.network(provider.photoURL!),
-                          subtitle: Text(
-                                  "${provider.email == null ? "" : "Email: ${provider.email}\n"}"
-                                  "${provider.displayName == null ? "" : "Name: ${provider.displayName}\n"}"),
+                          subtitle: Text("${provider.displayName == null ? "" : "Name: ${provider.displayName}\n"}" "${provider.email == null ? "" : "Email: ${provider.email}\n"}"),
                           isThreeLine: true,
                         ),
                       ),
@@ -249,6 +252,7 @@ class _UserInfoCardState extends State<_UserInfoCard> {
   }
 }
 
+/// Gera os botões de atualizar, editar e excluir conta
 class UpdateUserDialog extends StatefulWidget {
   final User? user;
 
@@ -272,14 +276,14 @@ class _UpdateUserDialogState extends State<UpdateUserDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Update profile'),
+      title: const Text('Atualizar perfil'),
       content: SingleChildScrollView(
         child: ListBody(
           children: [
             TextFormField(
               controller: _nameController,
               autocorrect: false,
-              decoration: const InputDecoration(labelText: 'displayName'),
+              decoration: const InputDecoration(labelText: 'Nome:'),
             ),
           ],
         ),
@@ -292,7 +296,7 @@ class _UpdateUserDialogState extends State<UpdateUserDialog> {
                 photoURL: _urlController.text);
             Navigator.of(context).pop();
           },
-          child: const Text('Update'),
+          child: const Text('Atualizar'),
         )
       ],
     );
@@ -306,16 +310,17 @@ class _UpdateUserDialogState extends State<UpdateUserDialog> {
   }
 }
 
-class _OtherProvidersSignInSection extends StatefulWidget {
+/// Gera o card que traz a opção de login com conta Google
+class _SignInWithGoogle extends StatefulWidget {
   final User? user;
   final Future<void> checkPermissions;
-  _OtherProvidersSignInSection(this.user, this.checkPermissions);
+  _SignInWithGoogle(this.user, this.checkPermissions);
 
   @override
-  State<StatefulWidget> createState() => _OtherProvidersSignInSectionState();
+  State<StatefulWidget> createState() => _SignInWithGoogleState();
 }
 
-class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSection> {
+class _SignInWithGoogleState extends State<_SignInWithGoogle> {
 
 
   @override
@@ -338,11 +343,12 @@ class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSecti
                 )
             ),
           ]
-      ),),
-
+        ),
+      ),
     );
   }
 
+  /// Método para realizar o login com Google
   Future<void> _signInWithGoogle() async {
     try {
       UserCredential userCredential;
@@ -363,20 +369,22 @@ class _OtherProvidersSignInSectionState extends State<_OtherProvidersSignInSecti
 
       final user = userCredential.user;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Sign In ${user?.uid} with Google'),
+        content: Text('Login realizado com sucesso!'),
       ));
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to sign in with Google: $e'),
+          content: Text('Houve uma falha ao logar: $e'),
         ),
       );
     }
   }
 }
 
+/// Gera o card com o acesso para solicitar registro como prestadora de serviços
 class _EmployeeRegister extends StatefulWidget {
+
   final User? user;
   final Future<void> checkPermissions;
   _EmployeeRegister(this.user, this.checkPermissions);
@@ -386,7 +394,6 @@ class _EmployeeRegister extends StatefulWidget {
 }
 
 class _EmployeeRegisterState extends State<_EmployeeRegister> {
-
 
   @override
   Widget build(BuildContext context) {
@@ -409,6 +416,7 @@ class _EmployeeRegisterState extends State<_EmployeeRegister> {
   }
 }
 
+/// Gera o card com o acesso para solicitar validação de cadastro
 class _UserRegister extends StatefulWidget {
   final User? user;
   _UserRegister(this.user);
@@ -438,6 +446,7 @@ class _UserRegisterState extends State<_UserRegister> {
   }
 }
 
+/// Gera o card com o acesso para validar usuárias
 class _ValidateUser extends StatefulWidget {
   final User? user;
   _ValidateUser(this.user);
@@ -467,6 +476,7 @@ class _ValidateUserState extends State<_ValidateUser> {
   }
 }
 
+/// Gera o card com o acesso para validar solicitação de prestadora de serviços
 class _ValidateEmployee extends StatefulWidget {
   final User? user;
   _ValidateEmployee(this.user);
