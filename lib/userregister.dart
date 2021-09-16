@@ -177,6 +177,8 @@ class _RegisterFormState extends State<_RegisterForm>{
                   uploadTask.whenComplete(() async {
                     fileUrl = await FirebaseStorage.instance.ref().child('${user.uid}/${file.path.split('/').last}').getDownloadURL();
                     var resultado = addUser();
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Solicitação realizada com sucesso!')),);
+                    Navigator.of(context).pop();
                   });
                 }
               },

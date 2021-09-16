@@ -301,12 +301,11 @@ class _RegisterFormState extends State<_RegisterForm>{
             child: ElevatedButton(
               onPressed: () {
                 if(_formKey.currentState!.validate()) {
-                  /*
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processando')),
-                  );*/
                   var resultado = addEmployee();
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Solicitação realizada com sucesso!')),);
+                  Navigator.of(context).pop();
                 }
+                setState(() {});
               },
               child: const Text('Enviar para Validação')
             ),

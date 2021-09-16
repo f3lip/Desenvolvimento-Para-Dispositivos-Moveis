@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Instanciamento de variáveis de conexão com a autenticação e com o banco de dados do firebase
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -30,8 +29,13 @@ class _SignInPageState extends State<SignInPage> {
   /// Verifica se a usuária conta com permissão de validar usuárias
   Future<void> userHasPermissionToValidateUser(User? user) async {
     if(user != null){
-      DocumentSnapshot result = await users.doc(user.uid).get();
-      if(result.get('usuário validador')) {
+      DocumentSnapshot result;
+      var resulttemp = false;
+      try{
+        result = await users.doc(user.uid).get();
+        resulttemp = result.get('usuário validador');
+      } catch(e){}
+      if(resulttemp) {
         setState(() {
           validateUser = true;
         });
@@ -44,8 +48,18 @@ class _SignInPageState extends State<SignInPage> {
   /// Verifica se a usuária conta com permissão para solicitar validação de cadastro
   Future<void> userHasPermissionToRegister(User? user) async {
     if(user != null){
-      DocumentSnapshot result = await users.doc(user.uid).get();
-      if(result.get('disponível para validação') == false && result.get('autorizado') == false){
+      try{
+        DocumentSnapshot result = await users.doc(user.uid).get();
+        if((result.get('disponível para validação') == false) && (result.get('autorizado') == false)){
+          setState(() {
+            registerAsUser = true;
+          });
+        } else{
+          setState(() {
+            registerAsUser = false;
+          });
+        }
+      } catch (e){
         setState(() {
           registerAsUser = true;
         });
@@ -58,8 +72,13 @@ class _SignInPageState extends State<SignInPage> {
   /// Verifica se a usuária conta com permissão de solicitar registro como prestadora de serviços
   Future<void> userHasPermissionToRegisterAsEmployee(User? user) async {
     if(user != null){
-      DocumentSnapshot result = await users.doc(user.uid).get();
-      if(result.get('autorizado') == true) {
+      DocumentSnapshot result;
+      var resulttemp = false;
+      try{
+        result = await users.doc(user.uid).get();
+        resulttemp = result.get('autorizado');
+      } catch (e){}
+      if(resulttemp == true) {
         setState(() {
           registerAsEmployee = true;
         });
@@ -72,8 +91,13 @@ class _SignInPageState extends State<SignInPage> {
   /// Verifica se a usuária conta com permissão para validar solicitações de registro de prestadoras de serviços
   Future<void> userHasPermissionToValidateEmployee(User? user) async {
     if(user != null){
-      DocumentSnapshot result = await users.doc(user.uid).get();
-      if(result.get('usuário validador') == true) {
+      DocumentSnapshot result;
+      var resulttemp = false;
+      try{
+        result = await users.doc(user.uid).get();
+        resulttemp = result.get('usuário validador');
+      } catch(e){}
+      if(resulttemp == true) {
         setState(() {
           validateEmployee = true;
         });
@@ -117,7 +141,6 @@ class _SignInPageState extends State<SignInPage> {
                 }
                 await _signOut();
 
-                final String uid = user.uid;
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('Deslogou com sucesso!'),
                 ));
@@ -133,8 +156,8 @@ class _SignInPageState extends State<SignInPage> {
           children: <Widget>[
             Visibility(visible: this.user != null, child: _UserInfoCard(user)),
             Visibility(visible: this.user == null, child: _SignInWithGoogle(user, checkPermissions())),
-            Visibility(visible: (this.registerAsEmployee == true), child: _EmployeeRegister(user, checkPermissions())),
-            Visibility(visible: (this.registerAsUser == true), child: _UserRegister(user)),
+            Visibility(visible: (this.registerAsEmployee == true), child: _EmployeeRegister(user, checkPermissions)),
+            Visibility(visible: (this.registerAsUser == true), child: _UserRegister(user, checkPermissions)),
             Visibility(visible: (this.validateUser == true), child: _ValidateUser(user)),
             Visibility(visible: (this.validateEmployee == true), child: _ValidateEmployee(user)),
           ],
@@ -336,9 +359,11 @@ class _SignInWithGoogleState extends State<_SignInWithGoogle> {
                 alignment: Alignment.center,
                 child: SignInButton(Buttons.Google,
                   text: 'Sign in with Google',
-                  onPressed: () {
-                    _signInWithGoogle();
-                    widget.checkPermissions;
+                  onPressed: () async {
+                    await _signInWithGoogle();
+                    setState(() {
+                      widget.checkPermissions;
+                    });
                   },
                 )
             ),
@@ -351,23 +376,13 @@ class _SignInWithGoogleState extends State<_SignInWithGoogle> {
   /// Método para realizar o login com Google
   Future<void> _signInWithGoogle() async {
     try {
-      UserCredential userCredential;
-
-      if (kIsWeb) {
-        var googleProvider = GoogleAuthProvider();
-        userCredential = await _auth.signInWithPopup(googleProvider);
-      } else {
-        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-        final GoogleSignInAuthentication googleAuth =
-        await googleUser!.authentication;
-        final googleAuthCredential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-        userCredential = await _auth.signInWithCredential(googleAuthCredential);
-      }
-
-      final user = userCredential.user;
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+      final googleAuthCredential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await _auth.signInWithCredential(googleAuthCredential);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Login realizado com sucesso!'),
       ));
@@ -386,7 +401,7 @@ class _SignInWithGoogleState extends State<_SignInWithGoogle> {
 class _EmployeeRegister extends StatefulWidget {
 
   final User? user;
-  final Future<void> checkPermissions;
+  final Future<void> Function() checkPermissions;
   _EmployeeRegister(this.user, this.checkPermissions);
 
   @override
@@ -405,8 +420,10 @@ class _EmployeeRegisterState extends State<_EmployeeRegister> {
               padding: const EdgeInsets.only(top: 16),
               alignment: Alignment.center,
               child:
-              TextButton(onPressed: () {
-                Navigator.of(context).pushNamed('Prestadora de Serviços').then((value) => widget.checkPermissions);
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('Prestadora de Serviços')
+                      .then((value) => widget.checkPermissions());
                 },
                 child: Text("Seja uma Prestadora de Serviços"),),
               ),
@@ -419,7 +436,8 @@ class _EmployeeRegisterState extends State<_EmployeeRegister> {
 /// Gera o card com o acesso para solicitar validação de cadastro
 class _UserRegister extends StatefulWidget {
   final User? user;
-  _UserRegister(this.user);
+  final Future<void> Function() checkPermissions;
+  _UserRegister(this.user, this.checkPermissions);
 
   @override
   State<StatefulWidget> createState() => _UserRegisterState();
@@ -437,7 +455,11 @@ class _UserRegisterState extends State<_UserRegister> {
               padding: const EdgeInsets.only(top: 16),
               alignment: Alignment.center,
               child:
-              TextButton(onPressed: () { Navigator.of(context).pushNamed('Registro de Usuária'); },
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('Registro de Usuária')
+                      .whenComplete(() => widget.checkPermissions());
+                  },
                 child: Text("Solicitar Validação de Cadastro"),),
             ),
           ]

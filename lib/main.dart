@@ -127,7 +127,13 @@ class _MyAppState extends State<MyApp> {
     if (user == null) {
       this._body = pendingLogin();
     } else {
-      if (usersList.docs[0].get('autorizado') == true) {
+      var temp;
+      try {
+        temp = usersList.docs[0].get('autorizado');
+      } catch (e) {
+        temp = false;
+      }
+      if (temp == true) {
         this._body = showEmployees();
       } else {
         this._body = pendingPermission();
@@ -150,16 +156,20 @@ class _MyAppState extends State<MyApp> {
     final FirebaseAuth _auth = FirebaseAuth.instance;
     user = _auth.currentUser;
     if(user != null){
-      getUsersDocuments().whenComplete(() {
-        setState(() {
-          updateBody();
+      try {
+        getUsersDocuments().whenComplete(() {
+          setState(() {
+            updateBody();
+          });
         });
-      });
-      getEmployeesDocuments().whenComplete(() {
-        setState(() {
-          updateBody();
+        getEmployeesDocuments().whenComplete(() {
+          setState(() {
+            updateBody();
+          });
         });
-      });
+      } catch (e) {
+        updateBody();
+      }
     } else{
       updateBody();
     }
@@ -190,9 +200,14 @@ class _MyAppState extends State<MyApp> {
                   final FirebaseAuth _auth = FirebaseAuth.instance;
                   this.user = _auth.currentUser;
                   this.selectedIndex = 0;
-                  getUsersDocuments().whenComplete(() {
-                    getEmployeesDocuments().whenComplete(() => updateBody());
-                  });
+                  try{
+                    getUsersDocuments().whenComplete(() {
+                      getEmployeesDocuments().whenComplete(() => updateBody());
+                    });
+                  } catch (e){
+                    updateBody();
+                  }
+
                 });
               });
             }
